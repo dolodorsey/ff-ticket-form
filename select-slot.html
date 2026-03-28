@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SELECT YOUR TIME SLOT — FOREVER FUTBOL MUSEUM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0A0A;--gold:#C9A84C;--gold-dim:rgba(201,168,76,0.15);--gold-border:rgba(201,168,76,0.25);
+  --text:#F5F0E8;--gray:#888;--green:#4CAF50;--red:#E53935;
+  --font-display:'Cormorant Garamond',Georgia,serif;--font-body:'Outfit',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+.grain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  z-index:9999}
+
+/* HEADER */
+header{text-align:center;padding:50px 20px 20px;border-bottom:1px solid var(--gold-border)}
+header h1{font-family:var(--font-display);font-size:clamp(1.6rem,4vw,2.4rem);color:var(--gold);letter-spacing:.2em;font-weight:400}
+header .sub{color:var(--gray);font-size:.65rem;letter-spacing:.25em;margin-top:6px;text-transform:uppercase}
+header .desc{color:var(--text);font-size:.85rem;margin-top:16px;opacity:.7;max-width:500px;margin-left:auto;margin-right:auto;line-height:1.6}
+
+/* LOCKED STATE */
+.locked-overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px}
+.locked-overlay .lock-icon{font-size:3rem;margin-bottom:20px;opacity:.5}
+.locked-overlay h2{font-family:var(--font-display);font-size:1.8rem;color:var(--gold);letter-spacing:.12em;margin-bottom:12px}
+.locked-overlay p{color:var(--gray);font-size:.9rem;line-height:1.7;max-width:420px}
+.locked-overlay .countdown{margin-top:30px;display:flex;gap:20px;justify-content:center}
+.locked-overlay .countdown .unit{text-align:center}
+.locked-overlay .countdown .num{font-family:var(--font-display);font-size:2.2rem;color:var(--gold);display:block}
+.locked-overlay .countdown .lbl{font-size:.6rem;color:var(--gray);letter-spacing:.15em;text-transform:uppercase}
+
+/* VERIFY FORM */
+.verify-section{max-width:480px;margin:0 auto;padding:40px 20px}
+.verify-section h2{font-family:var(--font-display);font-size:1.5rem;color:var(--gold);letter-spacing:.1em;text-align:center;margin-bottom:8px}
+.verify-section .hint{text-align:center;color:var(--gray);font-size:.8rem;margin-bottom:30px}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:.65rem;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px}
+.form-group input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--gold-border);color:var(--text);font-family:var(--font-body);font-size:.9rem;letter-spacing:.05em;outline:none;transition:border .3s}
+.form-group input:focus{border-color:var(--gold)}
+.form-group input::placeholder{color:rgba(255,255,255,0.2)}
+.btn-gold{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#8B7332,#C9A84C);color:var(--bg);font-family:var(--font-body);font-weight:600;font-size:.85rem;letter-spacing:.2em;text-transform:uppercase;border:none;cursor:pointer;transition:opacity .3s}
+.btn-gold:hover{opacity:.9}
+.btn-gold:disabled{opacity:.4;cursor:not-allowed}
+.error-msg{color:var(--red);font-size:.8rem;text-align:center;margin-top:12px;min-height:20px}
+.success-msg{color:var(--green);font-size:.8rem;text-align:center;margin-top:12px}
+
+/* SLOT SELECTION */
+.slot-section{max-width:640px;margin:0 auto;padding:20px 20px 60px;display:none}
+.slot-section h2{font-family:var(--font-display);font-size:1.5rem;color:var(--gold);letter-spacing:.1em;text-align:center;margin-bottom:6px}
+.slot-section .welcome{text-align:center;color:var(--gray);font-size:.8rem;margin-bottom:30px}
+.slot-section .welcome strong{color:var(--text)}
+
+/* Weekend Groups */
+.weekend-group{margin-bottom:30px;border:1px solid var(--gold-border);padding:20px}
+.weekend-group .wk-title{font-family:var(--font-display);font-size:1.1rem;color:var(--gold);letter-spacing:.1em;margin-bottom:16px;text-align:center;text-transform:uppercase}
+
+/* Date Row */
+.date-row{margin-bottom:16px}
+.date-row:last-child{margin-bottom:0}
+.date-label{font-size:.7rem;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.date-label .day-name{color:var(--text);font-weight:500}
+
+/* Time Slot Buttons */
+.time-slots{display:flex;flex-wrap:wrap;gap:8px}
+.slot-btn{padding:10px 16px;background:rgba(201,168,76,0.06);border:1px solid var(--gold-border);color:var(--text);font-family:var(--font-body);font-size:.8rem;cursor:pointer;transition:all .3s;position:relative;min-width:110px;text-align:center}
+.slot-btn:hover{background:rgba(201,168,76,0.15);border-color:var(--gold)}
+.slot-btn.selected{background:linear-gradient(135deg,#8B7332,#C9A84C);color:var(--bg);border-color:var(--gold);font-weight:600}
+.slot-btn.full{opacity:.3;cursor:not-allowed;text-decoration:line-through}
+.slot-btn .remaining{display:block;font-size:.6rem;color:var(--gray);margin-top:2px}
+.slot-btn.selected .remaining{color:rgba(10,10,10,0.6)}
+.slot-btn.full .remaining{color:var(--red)}
+
+/* Confirm Button */
+.confirm-area{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid var(--gold-border)}
+.confirm-area .selected-info{font-size:.85rem;color:var(--text);margin-bottom:16px;min-height:24px}
+.confirm-area .selected-info span{color:var(--gold);font-weight:500}
+
+/* SUCCESS OVERLAY */
+.success-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.97);z-index:1000;justify-content:center;align-items:center;flex-direction:column;text-align:center;padding:40px}
+.success-overlay.show{display:flex}
+.success-overlay h2{font-family:var(--font-display);font-size:2rem;color:var(--gold);letter-spacing:.15em;margin-bottom:12px}
+.success-overlay p{color:var(--gray);font-size:.9rem;line-height:1.8;max-width:420px}
+.success-overlay .booked-info{margin-top:24px;padding:20px 40px;border:1px solid var(--gold);display:inline-block}
+.success-overlay .booked-info .lbl{font-size:.6rem;color:var(--gray);letter-spacing:.2em;text-transform:uppercase}
+.success-overlay .booked-info .val{font-family:var(--font-display);font-size:1.4rem;color:var(--gold);letter-spacing:.1em;margin-top:4px}
+
+/* Already Booked State */
+.already-booked{text-align:center;padding:40px 20px}
+.already-booked h3{font-family:var(--font-display);font-size:1.3rem;color:var(--gold);letter-spacing:.1em;margin-bottom:12px}
+.already-booked p{color:var(--gray);font-size:.85rem;line-height:1.7}
+.already-booked .existing-slot{margin-top:20px;padding:16px 30px;border:1px solid var(--gold);display:inline-block}
+.already-booked .existing-slot .lbl{font-size:.6rem;color:var(--gray);letter-spacing:.2em}
+.already-booked .existing-slot .val{font-family:var(--font-display);font-size:1.2rem;color:var(--gold);margin-top:4px}
+
+@media(max-width:480px){
+  .time-slots{gap:6px}
+  .slot-btn{min-width:calc(50% - 6px);padding:10px 8px;font-size:.75rem}
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header>
+  <h1>FOREVER FUTBOL MUSEUM</h1>
+  <div class="sub">PAST · PRESENT · ETERNAL</div>
+  <div class="desc">SELECT YOUR PREFERRED VISIT TIME</div>
+</header>
+
+<!-- LOCKED STATE (before April 29) -->
+<div id="lockedView" class="locked-overlay" style="display:none">
+  <div class="lock-icon">🔒</div>
+  <h2>TIME SLOT SELECTION</h2>
+  <p>Time slot selection opens <strong style="color:var(--gold)">APRIL 29, 2026</strong> — 30 days before the museum opens. You will receive an email notification when it's time to select your preferred visit date and time.</p>
+  <div class="countdown">
+    <div class="unit"><span class="num" id="cDays">--</span><span class="lbl">Days</span></div>
+    <div class="unit"><span class="num" id="cHours">--</span><span class="lbl">Hours</span></div>
+    <div class="unit"><span class="num" id="cMins">--</span><span class="lbl">Minutes</span></div>
+  </div>
+</div>
+
+<!-- VERIFY FORM (after April 29) -->
+<div id="verifyView" class="verify-section" style="display:none">
+  <h2>VERIFY YOUR TICKET</h2>
+  <div class="hint">Enter your ticket code and email to select your time slot</div>
+  <div class="form-group">
+    <label>Ticket Code</label>
+    <input type="text" id="ticketCode" placeholder="FF-XXXX-XXXX" autocomplete="off">
+  </div>
+  <div class="form-group">
+    <label>Email Address</label>
+    <input type="email" id="verifyEmail" placeholder="your@email.com">
+  </div>
+  <button class="btn-gold" id="verifyBtn" onclick="verifyTicket()">FIND MY TICKET</button>
+  <div class="error-msg" id="verifyError"></div>
+</div>
+
+<!-- SLOT SELECTION (after verify) -->
+<div id="slotView" class="slot-section">
+  <h2>CHOOSE YOUR VISIT</h2>
+  <div class="welcome" id="welcomeMsg">Welcome back, <strong>---</strong></div>
+  <div id="slotsContainer"></div>
+  <div class="confirm-area">
+    <div class="selected-info" id="selectedInfo">Select a date and time above</div>
+    <button class="btn-gold" id="confirmBtn" onclick="confirmSlot()" disabled>CONFIRM MY TIME SLOT</button>
+    <div class="error-msg" id="slotError"></div>
+  </div>
+</div>
+
+<!-- ALREADY BOOKED -->
+<div id="alreadyBooked" class="already-booked" style="display:none">
+  <h3>YOU'RE ALL SET</h3>
+  <p>You've already selected your time slot. See you at the museum!</p>
+  <div class="existing-slot">
+    <div class="lbl">YOUR VISIT</div>
+    <div class="val" id="existingSlotInfo">---</div>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <h2>YOU'RE BOOKED!</h2>
+  <p>Your time slot has been confirmed. A confirmation email will be sent shortly. See you at the Forever Futbol Museum!</p>
+  <div class="booked-info">
+    <div class="lbl">YOUR VISIT</div>
+    <div class="val" id="bookedSlotInfo">---</div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://dzlmtvodpyhetvektfuo.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bG10dm9kcHloZXR2ZWt0ZnVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1ODQ4NjQsImV4cCI6MjA4NTE2MDg2NH0.qmnWB4aWdb7U8Iod9Hv8PQAOJO3AG0vYEGnPS--kfAo';
+const OPEN_DATE=new Date('2026-04-29T00:00:00-04:00'); // April 29, 2026 EDT
+
+let selectedSlotId=null;
+let verifiedTicketCode='';
+let verifiedEmail='';
+
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function sbHeaders(){return{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}}
+
+function formatTime12(t){
+  const h=parseInt(t.split(':')[0]);
+  if(h===0) return '12:00 AM';
+  if(h===12) return '12:00 PM';
+  if(h>12) return (h-12)+':00 PM';
+  return h+':00 AM';
+}
+
+function formatDateNice(ds){
+  const d=new Date(ds+'T12:00:00');
+  return DAYS[d.getDay()]+', '+MONTHS[d.getMonth()]+' '+d.getDate();
+}
+
+function getWeekendLabel(ds){
+  const d=new Date(ds+'T12:00:00');
+  // Find the Friday of this weekend
+  const day=d.getDay();
+  let fri=new Date(d);
+  if(day===0) fri.setDate(d.getDate()-2); // Sun->Fri
+  else if(day===6) fri.setDate(d.getDate()-1); // Sat->Fri
+  // else it's already Fri
+  let sun=new Date(fri);
+  sun.setDate(fri.getDate()+2);
+  return MONTHS[fri.getMonth()]+' '+fri.getDate()+' – '+MONTHS[sun.getMonth()]+' '+sun.getDate();
+}
+
+// Check if selection is open
+function checkOpen(){
+  const now=new Date();
+  if(now >= OPEN_DATE){
+    document.getElementById('verifyView').style.display='block';
+    document.getElementById('lockedView').style.display='none';
+    return true;
+  } else {
+    document.getElementById('lockedView').style.display='flex';
+    document.getElementById('verifyView').style.display='none';
+    startCountdown();
+    return false;
+  }
+}
+
+function startCountdown(){
+  function update(){
+    const now=new Date();
+    const diff=OPEN_DATE-now;
+    if(diff<=0){location.reload();return}
+    const days=Math.floor(diff/86400000);
+    const hrs=Math.floor((diff%86400000)/3600000);
+    const mins=Math.floor((diff%3600000)/60000);
+    document.getElementById('cDays').textContent=days;
+    document.getElementById('cHours').textContent=hrs;
+    document.getElementById('cMins').textContent=mins;
+  }
+  update();
+  setInterval(update,30000);
+}
+
+async function verifyTicket(){
+  const code=document.getElementById('ticketCode').value.trim().toUpperCase();
+  const email=document.getElementById('verifyEmail').value.trim().toLowerCase();
+  const errEl=document.getElementById('verifyError');
+  errEl.textContent='';
+
+  if(!code||!email){errEl.textContent='Please enter both your ticket code and email.';return}
+
+  document.getElementById('verifyBtn').disabled=true;
+  document.getElementById('verifyBtn').textContent='VERIFYING...';
+
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/ff_ticket_recipients?ticket_code=eq.'+encodeURIComponent(code)+'&email=eq.'+encodeURIComponent(email)+'&select=id,first_name,last_name,email,ticket_code,selected_slot_id,selected_date,selected_time',{headers:sbHeaders()});
+    const data=await r.json();
+    
+    if(!data||data.length===0){
+      errEl.textContent='No ticket found with that code and email. Please check your information.';
+      document.getElementById('verifyBtn').disabled=false;
+      document.getElementById('verifyBtn').textContent='FIND MY TICKET';
+      return;
+    }
+
+    const person=data[0];
+    verifiedTicketCode=code;
+    verifiedEmail=email;
+
+    // Already has a slot selected
+    if(person.selected_slot_id){
+      document.getElementById('verifyView').style.display='none';
+      document.getElementById('alreadyBooked').style.display='block';
+      document.getElementById('existingSlotInfo').textContent=formatDateNice(person.selected_date)+' at '+formatTime12(person.selected_time);
+      return;
+    }
+
+    // Show slot selection
+    document.getElementById('welcomeMsg').innerHTML='Welcome back, <strong>'+(person.first_name||'')+'</strong>';
+    document.getElementById('verifyView').style.display='none';
+    document.getElementById('slotView').style.display='block';
+    await loadSlots();
+
+  }catch(e){
+    errEl.textContent='Error verifying ticket. Please try again.';
+    console.error(e);
+  }finally{
+    document.getElementById('verifyBtn').disabled=false;
+    document.getElementById('verifyBtn').textContent='FIND MY TICKET';
+  }
+}
+
+async function loadSlots(){
+  const r=await fetch(SB_URL+'/rest/v1/ff_time_slots?is_active=eq.true&order=slot_date.asc,slot_time.asc&select=id,slot_date,slot_time,capacity,booked',{headers:sbHeaders()});
+  const slots=await r.json();
+
+  // Group by weekend (Fri-Sun blocks)
+  const weekends={};
+  slots.forEach(s=>{
+    const wk=getWeekendLabel(s.slot_date);
+    if(!weekends[wk]) weekends[wk]=[];
+    weekends[wk].push(s);
+  });
+
+  const container=document.getElementById('slotsContainer');
+  container.innerHTML='';
+
+  Object.keys(weekends).forEach(wk=>{
+    const group=document.createElement('div');
+    group.className='weekend-group';
+    
+    let html='<div class="wk-title">Weekend of '+wk+'</div>';
+    
+    // Group by date within weekend
+    const byDate={};
+    weekends[wk].forEach(s=>{
+      if(!byDate[s.slot_date]) byDate[s.slot_date]=[];
+      byDate[s.slot_date].push(s);
+    });
+
+    Object.keys(byDate).forEach(dt=>{
+      html+='<div class="date-row">';
+      html+='<div class="date-label"><span class="day-name">'+formatDateNice(dt)+'</span></div>';
+      html+='<div class="time-slots">';
+      byDate[dt].forEach(s=>{
+        const remaining=s.capacity-s.booked;
+        const full=remaining<=0;
+        html+='<button class="slot-btn'+(full?' full':'')+'" data-id="'+s.id+'" data-date="'+s.slot_date+'" data-time="'+s.slot_time+'" '+(full?'disabled':'')+' onclick="selectSlot(this)">';
+        html+=formatTime12(s.slot_time);
+        if(full){
+          html+='<span class="remaining">FULL</span>';
+        }else if(remaining<=15){
+          html+='<span class="remaining">'+remaining+' left</span>';
+        }else{
+          html+='<span class="remaining">Available</span>';
+        }
+        html+='</button>';
+      });
+      html+='</div></div>';
+    });
+
+    group.innerHTML=html;
+    container.appendChild(group);
+  });
+}
+
+function selectSlot(btn){
+  if(btn.classList.contains('full')) return;
+  
+  // Deselect all
+  document.querySelectorAll('.slot-btn.selected').forEach(b=>b.classList.remove('selected'));
+  
+  // Select this one
+  btn.classList.add('selected');
+  selectedSlotId=btn.dataset.id;
+  
+  const dateStr=formatDateNice(btn.dataset.date);
+  const timeStr=formatTime12(btn.dataset.time);
+  
+  document.getElementById('selectedInfo').innerHTML='Selected: <span>'+dateStr+' at '+timeStr+'</span>';
+  document.getElementById('confirmBtn').disabled=false;
+  document.getElementById('slotError').textContent='';
+}
+
+async function confirmSlot(){
+  if(!selectedSlotId||!verifiedTicketCode||!verifiedEmail) return;
+
+  const errEl=document.getElementById('slotError');
+  errEl.textContent='';
+  
+  document.getElementById('confirmBtn').disabled=true;
+  document.getElementById('confirmBtn').textContent='BOOKING...';
+
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/book_time_slot',{
+      method:'POST',
+      headers:sbHeaders(),
+      body:JSON.stringify({
+        p_ticket_code:verifiedTicketCode,
+        p_email:verifiedEmail,
+        p_slot_id:selectedSlotId
+      })
+    });
+    const res=await r.json();
+
+    if(res.success){
+      const dateStr=formatDateNice(res.date);
+      const timeStr=formatTime12(res.time);
+      document.getElementById('bookedSlotInfo').textContent=dateStr+' at '+timeStr;
+      document.getElementById('successOverlay').classList.add('show');
+    }else{
+      errEl.textContent=res.error||'Failed to book slot. Please try again.';
+      // Reload slots in case capacity changed
+      await loadSlots();
+      selectedSlotId=null;
+      document.getElementById('selectedInfo').textContent='Select a date and time above';
+    }
+  }catch(e){
+    errEl.textContent='Error booking slot. Please try again.';
+    console.error(e);
+  }finally{
+    document.getElementById('confirmBtn').disabled=false;
+    document.getElementById('confirmBtn').textContent='CONFIRM MY TIME SLOT';
+  }
+}
+
+// URL params support
+const params=new URLSearchParams(window.location.search);
+if(params.get('code')){
+  document.getElementById('ticketCode').value=params.get('code');
+}
+if(params.get('email')){
+  document.getElementById('verifyEmail').value=params.get('email');
+}
+
+// Init
+checkOpen();
+</script>
+</body>
+</html>
